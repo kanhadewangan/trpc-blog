@@ -1,6 +1,7 @@
 "use client";
 import axios from "axios";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function List() {
   const [name, setName] = useState<string>("");
@@ -8,6 +9,7 @@ export default function List() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<number | null>(null);
+  const router = useRouter();
 
   const canSubmit = name.trim().length > 0 && age !== "" && Number(age) > 0;
 
@@ -83,11 +85,13 @@ export default function List() {
           </button>
         </div>
       </form>
-
       {error && <div className="text-sm text-red-600">Error: {error}</div>}
       {successId && (
         <div className="text-sm text-green-700">Success — New User ID: {successId}</div>
       )}
+      <button className="px-3 py-2 rounded border text-sm" onClick={() => router.push("/login")}>
+        Reset
+      </button>
     </section>
   );
 }

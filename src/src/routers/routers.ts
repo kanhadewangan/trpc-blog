@@ -1,14 +1,16 @@
 import { router, procedure } from "../trpc";
-import { z } from "zod";
+import { email, z } from "zod";
 import { users } from "../../db/schema";
 import { eq } from "drizzle-orm";
 
 export const appRouter = router({
-  sigIn: procedure
+  signIn: procedure
     .input(
       z.object({
         name: z.string(),
-        age: z.number(),
+        email: z.email(),
+        password: z.string().min(6),
+        
       })
     )
     .mutation(async ({ input, ctx }) => {
@@ -17,34 +19,23 @@ export const appRouter = router({
         return {
           id: Date.now(), // simple fallback id
           name: input.name,
-          age: input.age,
+          email: input.email,
+          password: input.password,
         };
-      }
-
-      const db = (ctx as any).dbClient;
-
-      try {
-        // attempt to insert via the provided db client; if this fails, fall back
-        const [newUser] = await db
-          .insert(users)
-          .values({
-            // do not hardcode id; let DB generate it if possible
-            name: input.name,
-            age: input.age,
-          })
-          .returning();
-
-        return newUser;
-      } catch (err) {
-        // on DB error, return a fallback object instead of throwing
-        return {
-          id: Date.now(),
-          name: input.name,
-          age: input.age,
-          _warning: `DB insert failed: ${String(err)}`,
-        };
-      }
+      }      
     }),
+    login: procedure.input(
+      z.object({
+        email: z.email(),
+            password: z.string().min(6),
+        })).mutation(async({input,ctx})=>{
+            return {input};
+        }),
+        loginUser: procedure.query(()=>{
+            return {message: "Login successful"};
+        })
+        
+            
 });
 
 export type AppRouter = typeof appRouter;
