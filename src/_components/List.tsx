@@ -2,6 +2,7 @@
 import axios from "axios";
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { trpc } from "../app/_trpc/client";
 
 export default function List() {
   const [name, setName] = useState<string>("");
@@ -11,30 +12,38 @@ export default function List() {
   const [successId, setSuccessId] = useState<number | null>(null);
   const router = useRouter();
 
+  const mutation = trpc.signIn.useMutation({
+    onSuccess(data) {
+      setError(null);
+      setLoading(false);
+      console.log("User created with ID:", data);
+    },
+    onError(err) {
+      setError(err.message);
+      setSuccessId(null);
+      setLoading(false);
+    },
+  });
   const canSubmit = name.trim().length > 0 && age !== "" && Number(age) > 0;
+const hanleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!canSubmit) return;
+    setLoading(true);
+    setError(null);
+    setSuccessId(null);
 
- async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if(name && age){
-        const res = await axios.post("/api/trpc/sigIn", {
-          name,
-          age: Number(age),
-        });
-        setSuccessId(res.data.id);
-        setError(null);
-        console.log("User created with ID:", res.data.result.data);
-    }
-    if(!name || age===""){
-        setError("Name and Age are required.");
-        setSuccessId(null);
-    }
- }
+    mutation.mutate({
+      name: name.trim(),
+      email: `${name.trim().toLowerCase().replace(/\s+/g, ".")}@example.com`,
+      password: "password123",
+    });
+  }
 
   return (
     <section className="rounded-lg bg-white shadow-sm p-6 space-y-4">
       <h2 className="text-lg font-medium">Sign In / Create User</h2>
 
-      <form onSubmit={handleSubmit} className="grid gap-3">
+      <form  onSubmit={hanleSubmit} className="grid gap-3">
         <label className="grid gap-1">
           <span className="text-sm text-gray-700">Name</span>
           <input

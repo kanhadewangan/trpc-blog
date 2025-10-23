@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from "react";
-
 "use client";
+
+import React, { useEffect, useState } from "react";
+import { trpc } from "../_trpc/client";
+import { tr } from "zod/locales";
+
 
 
 type FormState = {
@@ -19,7 +22,7 @@ type FormState = {
         confirm: "",
         remember: false,
     });
-
+    const mutation = trpc.signIn.useMutation();
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [showPassword, setShowPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -53,18 +56,25 @@ type FormState = {
         return Object.keys(e).length === 0;
     }
 
-    async function handleSubmit(e: React.FormEvent) {
+     function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setSuccess(null);
         if (!validate()) return;
-        setSubmitting(true);
-        // simulate API
-        await new Promise((r) => setTimeout(r, 1200));
         setSubmitting(false);
-        setSuccess("Account created successfully. Welcome!");
-        setForm({ name: "", email: "", password: "", confirm: "", remember: false });
-        setErrors({});
+        mutation.mutate({
+            name: form.name,
+            email: form.email,
+            password: form.password,
+        }, {
+            onSuccess(data) {
+                setSubmitting(true);
+                setSuccess("Account created successfully! You can now log in.");
+            }
+        });
+            console.log("Render SignupPage", { form, errors, pwScore, submitting, success });
+
     }
+
 
     return (
         <>

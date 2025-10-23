@@ -30,22 +30,12 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 min-h-screen`}
       >
-        <header className="w-full border-b bg-white/60 backdrop-blur-sm">
-          <div className="mx-auto max-w-4xl px-4 py-3 flex items-center justify-between">
-            <h1 className="text-lg font-semibold">Simple Next App</h1>
-            <nav className="text-sm text-gray-600">Home</nav>
-          </div>
-        </header>
+       
 
         <main className="mx-auto max-w-4xl px-4 py-10">
           <TRPCProvider>{children}</TRPCProvider>
         </main>
 
-        <footer className="w-full border-t">
-          <div className="mx-auto max-w-4xl px-4 py-4 text-sm text-gray-500">
-            © {new Date().getFullYear()} Simple Next App
-          </div>
-        </footer>
       </body>
     </html>
   );
