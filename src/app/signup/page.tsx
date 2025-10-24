@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Link from "next/link";
 import { trpc } from "../_trpc/client";
-import { tr } from "zod/locales";
-
-
 
 type FormState = {
     name: string;
@@ -14,7 +12,7 @@ type FormState = {
     remember: boolean;
 };
 
- function SignupPage( ) {
+function SignupPage() {
     const [form, setForm] = useState<FormState>({
         name: "",
         email: "",
@@ -22,7 +20,7 @@ type FormState = {
         confirm: "",
         remember: false,
     });
-    const mutation = trpc.signIn.useMutation();
+    const mutation = trpc.signup.useMutation();
     const [errors, setErrors] = useState<Record<string, string>>({});
     const [showPassword, setShowPassword] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -56,325 +54,278 @@ type FormState = {
         return Object.keys(e).length === 0;
     }
 
-     function handleSubmit(e: React.FormEvent) {
+    function handleSubmit(e: React.FormEvent) {
         e.preventDefault();
         setSuccess(null);
         if (!validate()) return;
-        setSubmitting(false);
+        setSubmitting(true);
         mutation.mutate({
             name: form.name,
             email: form.email,
             password: form.password,
         }, {
-            onSuccess(data) {
-                setSubmitting(true);
+            onSuccess(data: any) {
                 setSuccess("Account created successfully! You can now log in.");
+                setSubmitting(false);
+                // Store userId in localStorage if available
+                if (data && data.id) {
+                    localStorage.setItem("userId", data.id.toString());
+                    // Redirect to home page after successful signup
+                    setTimeout(() => {
+                        window.location.href = "/";
+                    }, 2000);
+                }
+            },
+            onError() {
+                setSubmitting(false);
             }
         });
-            console.log("Render SignupPage", { form, errors, pwScore, submitting, success });
-
     }
 
-
     return (
-        <>
-            <main className="page">
-                <div className="hero">
-                    <div className="glass">
-                        <h1 className="title">Create your account</h1>
-                        <p className="subtitle">Join us — beautiful forms, delightful experience.</p>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 text-black">
+            <div className="max-w-md w-full space-y-8">
+                {/* Header */}
+                <div className="text-center">
+                    <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mb-6">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Your Account</h2>
+                    <p className="text-gray-600">Join our community of writers and start sharing your stories</p>
+                </div>
 
-                        <form className="form" onSubmit={handleSubmit} noValidate>
-                            <label className="field">
-                                <span className="labelText">Full name</span>
-                                <input
-                                    id="name"
-                                    name="name"
-                                    type="text"
-                                    placeholder="Jane Doe"
-                                    value={form.name}
-                                    onChange={(ev) => setForm({ ...form, name: ev.target.value })}
-                                    aria-invalid={!!errors.name}
-                                    aria-describedby={errors.name ? "name-error" : undefined}
-                                />
-                                {errors.name && (
-                                    <div id="name-error" role="alert" className="error">
-                                        {errors.name}
-                                    </div>
-                                )}
+                {/* Signup Form */}
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+                    <form className="space-y-6" onSubmit={handleSubmit}>
+                        <div>
+                            <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-2">
+                                Full Name
                             </label>
+                            <input
+                                id="name"
+                                name="name"
+                                type="text"
+                                autoComplete="name"
+                                required
+                                value={form.name}
+                                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400"
+                                placeholder="Enter your full name"
+                            />
+                            {errors.name && (
+                                <p className="mt-1 text-sm text-red-600">{errors.name}</p>
+                            )}
+                        </div>
 
-                            <label className="field">
-                                <span className="labelText">Email</span>
-                                <input
-                                    id="email"
-                                    name="email"
-                                    type="email"
-                                    placeholder="you@company.com"
-                                    value={form.email}
-                                    onChange={(ev) => setForm({ ...form, email: ev.target.value })}
-                                    aria-invalid={!!errors.email}
-                                    aria-describedby={errors.email ? "email-error" : undefined}
-                                />
-                                {errors.email && (
-                                    <div id="email-error" role="alert" className="error">
-                                        {errors.email}
-                                    </div>
-                                )}
+                        <div>
+                            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                                Email Address
                             </label>
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                autoComplete="email"
+                                required
+                                value={form.email}
+                                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400"
+                                placeholder="Enter your email"
+                            />
+                            {errors.email && (
+                                <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                            )}
+                        </div>
 
-                            <div className="twoCols">
-                                <label className="field">
-                                    <span className="labelText">Password</span>
-                                    <div className="pwWrap">
-                                        <input
-                                            id="password"
-                                            name="password"
-                                            type={showPassword ? "text" : "password"}
-                                            placeholder="Create a password"
-                                            value={form.password}
-                                            onChange={(ev) => setForm({ ...form, password: ev.target.value })}
-                                            aria-invalid={!!errors.password}
-                                            aria-describedby={errors.password ? "pw-error" : "pw-strength"}
-                                        />
-                                        <button
-                                            type="button"
-                                            className="toggle"
-                                            onClick={() => setShowPassword((s) => !s)}
-                                            aria-label={showPassword ? "Hide password" : "Show password"}
-                                            tabIndex={0}
-                                        >
-                                            {showPassword ? "Hide" : "Show"}
-                                        </button>
-                                    </div>
-                                    <div id="pw-strength" className="pwStrength" aria-hidden="false">
-                                        <div className={`meter s${pwScore}`} />
-                                        <div className="pwMeta">
-                                            <small className="pwLabel">{pwLabel(pwScore)}</small>
-                                            <small className="pwTip">Use uppercase, numbers & symbols.</small>
-                                        </div>
-                                    </div>
-                                    {errors.password && (
-                                        <div id="pw-error" role="alert" className="error">
-                                            {errors.password}
-                                        </div>
+                        <div>
+                            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+                                Password
+                            </label>
+                            <div className="relative">
+                                <input
+                                    id="password"
+                                    name="password"
+                                    type={showPassword ? "text" : "password"}
+                                    autoComplete="new-password"
+                                    required
+                                    minLength={8}
+                                    value={form.password}
+                                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400"
+                                    placeholder="Create a password"
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                >
+                                    {showPassword ? (
+                                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                                        </svg>
+                                    ) : (
+                                        <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
                                     )}
-                                </label>
-
-                                <label className="field">
-                                    <span className="labelText">Confirm</span>
-                                    <input
-                                        id="confirm"
-                                        name="confirm"
-                                        type={showPassword ? "text" : "password"}
-                                        placeholder="Re-type password"
-                                        value={form.confirm}
-                                        onChange={(ev) => setForm({ ...form, confirm: ev.target.value })}
-                                        aria-invalid={!!errors.confirm}
-                                        aria-describedby={errors.confirm ? "confirm-error" : undefined}
-                                    />
-                                    {errors.confirm && (
-                                        <div id="confirm-error" role="alert" className="error">
-                                            {errors.confirm}
-                                        </div>
-                                    )}
-                                </label>
-                            </div>
-
-                            <label className="checkbox">
-                                <input
-                                    type="checkbox"
-                                    checked={form.remember}
-                                    onChange={(ev) => setForm({ ...form, remember: ev.target.checked })}
-                                />
-                                <span>Keep me signed in</span>
-                            </label>
-
-                            <button
-                                className="submit"
-                                type="submit"
-                                disabled={submitting}
-                                aria-busy={submitting}
-                            >
-                                {submitting ? "Creating..." : "Create account"}
-                            </button>
-
-                            <div className="divider">Or continue with</div>
-
-                            <div className="socials">
-                                <button type="button" className="social google" aria-label="Sign up with Google">
-                                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
-                                        <path d="M17.64 9.2c0-.64-.06-1.25-.17-1.84H9v3.48h4.84c-.21 1.16-.86 2.15-1.83 2.8v2.33h2.96c1.73-1.6 2.73-3.95 2.73-6.77z" fill="#4285F4"/>
-                                        <path d="M9 18c2.43 0 4.46-.8 5.95-2.18l-2.96-2.33c-.82.55-1.87.88-2.99.88-2.3 0-4.25-1.55-4.95-3.64H1.97v2.29C3.46 15.86 6.02 18 9 18z" fill="#34A853"/>
-                                        <path d="M4.05 10.73a5.42 5.42 0 010-3.46V4.98H1.97a9 9 0 000 8.04l2.08-2.29z" fill="#FBBC05"/>
-                                        <path d="M9 3.56c1.32 0 2.5.45 3.43 1.34l2.57-2.56C13.45.86 11.42 0 9 0 6.02 0 3.46 2.14 1.97 4.98l2.08 2.29C4.75 5.11 6.7 3.56 9 3.56z" fill="#EA4335"/>
-                                    </svg>
-                                    Google
-                                </button>
-
-                                <button type="button" className="social github" aria-label="Sign up with GitHub">
-                                    <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden>
-                                        <path fillRule="evenodd" clipRule="evenodd" d="M8 .198a8 8 0 00-2.53 15.59c.4.073.55-.174.55-.387 0-.19-.007-.693-.01-1.36-2.24.487-2.71-1.08-2.71-1.08-.364-.924-.89-1.17-.89-1.17-.727-.497.055-.487.055-.487.803.057 1.225.825 1.225.825.714 1.223 1.873.87 2.328.666.072-.517.28-.87.508-1.07-1.788-.203-3.667-.894-3.667-3.978 0-.879.314-1.597.826-2.16-.083-.204-.358-1.025.078-2.136 0 0 .67-.215 2.2.82a7.64 7.64 0 012-.27 7.64 7.64 0 012 .27c1.53-1.035 2.2-.82 2.2-.82.436 1.11.162 1.932.08 2.136.513.563.825 1.281.825 2.16 0 3.093-1.882 3.772-3.676 3.97.288.247.544.733.544 1.48 0 1.068-.01 1.93-.01 2.192 0 .215.147.463.556.385A8 8 0 008 .198z" fill="#fff"/>
-                                    </svg>
-                                    GitHub
                                 </button>
                             </div>
-
-                            {success && (
-                                <div role="status" className="success" aria-live="polite">
-                                    {success}
+                            
+                            {/* Password Strength Indicator */}
+                            {form.password && (
+                                <div className="mt-2">
+                                    <div className="flex items-center space-x-2">
+                                        <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                            <div 
+                                                className={`h-2 rounded-full transition-all duration-300 ${
+                                                    pwScore === 0 ? 'w-0 bg-red-500' :
+                                                    pwScore === 1 ? 'w-1/4 bg-red-500' :
+                                                    pwScore === 2 ? 'w-1/2 bg-yellow-500' :
+                                                    pwScore === 3 ? 'w-3/4 bg-blue-500' :
+                                                    'w-full bg-green-500'
+                                                }`}
+                                            />
+                                        </div>
+                                        <span className={`text-xs font-medium ${
+                                            pwScore === 0 ? 'text-red-600' :
+                                            pwScore === 1 ? 'text-red-600' :
+                                            pwScore === 2 ? 'text-yellow-600' :
+                                            pwScore === 3 ? 'text-blue-600' :
+                                            'text-green-600'
+                                        }`}>
+                                            {pwLabel(pwScore)}
+                                        </span>
+                                    </div>
                                 </div>
                             )}
-                        </form>
+                            
+                            {errors.password && (
+                                <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label htmlFor="confirm" className="block text-sm font-semibold text-gray-700 mb-2">
+                                Confirm Password
+                            </label>
+                            <input
+                                id="confirm"
+                                name="confirm"
+                                type={showPassword ? "text" : "password"}
+                                autoComplete="new-password"
+                                required
+                                value={form.confirm}
+                                onChange={(e) => setForm({ ...form, confirm: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all placeholder-gray-400"
+                                placeholder="Confirm your password"
+                            />
+                            {errors.confirm && (
+                                <p className="mt-1 text-sm text-red-600">{errors.confirm}</p>
+                            )}
+                        </div>
+
+                        <div className="flex items-center">
+                            <input
+                                id="remember"
+                                name="remember"
+                                type="checkbox"
+                                checked={form.remember}
+                                onChange={(e) => setForm({ ...form, remember: e.target.checked })}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <label htmlFor="remember" className="ml-2 block text-sm text-gray-700">
+                                Keep me signed in
+                            </label>
+                        </div>
+
+                        <button
+                            type="submit"
+                            disabled={submitting}
+                            className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-lg"
+                        >
+                            {submitting ? (
+                                <div className="flex items-center space-x-2">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                    <span>Creating account...</span>
+                                </div>
+                            ) : (
+                                "Create Account"
+                            )}
+                        </button>
+
+                        {success && (
+                            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                                <div className="flex">
+                                    <svg className="h-5 w-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <div className="ml-3">
+                                        <h3 className="text-sm font-medium text-green-800">Success!</h3>
+                                        <p className="text-sm text-green-700 mt-1">{success}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {mutation.error && (
+                            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                                <div className="flex">
+                                    <svg className="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                    </svg>
+                                    <div className="ml-3">
+                                        <h3 className="text-sm font-medium text-red-800">Signup Failed</h3>
+                                        <p className="text-sm text-red-700 mt-1">{mutation.error.message}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </form>
+
+                    <div className="mt-6">
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-300" />
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                            </div>
+                        </div>
+
+                        <div className="mt-6 grid grid-cols-2 gap-3">
+                            <button className="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+                                <svg className="h-5 w-5" viewBox="0 0 24 24">
+                                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                    <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                    <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                </svg>
+                                <span className="ml-2">Google</span>
+                            </button>
+
+                            <button className="w-full inline-flex justify-center py-3 px-4 border border-gray-300 rounded-xl shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 transition-colors">
+                                <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                                </svg>
+                                <span className="ml-2">GitHub</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 text-center">
+                        <p className="text-sm text-gray-600">
+                            Already have an account?{" "}
+                            <Link href="/login" className="font-semibold text-blue-600 hover:text-blue-500 transition-colors">
+                                Sign in here
+                            </Link>
+                        </p>
                     </div>
                 </div>
-
-                <div className="attribution">
-                    Crafted with care — responsive, accessible and delightful.
-                </div>
-            </main>
-
-            <style jsx>{`
-                :root {
-                    --bg-1: #0f172a;
-                    --bg-2: #011627;
-                    --card: rgba(255,255,255,0.06);
-                    --glass: rgba(255,255,255,0.04);
-                    --accent: linear-gradient(90deg,#7c3aed,#06b6d4);
-                    --muted: rgba(255,255,255,0.7);
-                }
-
-                * { box-sizing: border-box; }
-                body,html,#__next { height: 100%; margin: 0; font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
-
-                .page {
-                    min-height: 100vh;
-                    display: grid;
-                    place-items: center;
-                    padding: 48px 20px;
-                    background: radial-gradient(1000px 600px at 10% 20%, rgba(124,58,237,0.12), transparent),
-                                            radial-gradient(800px 500px at 90% 80%, rgba(6,182,212,0.06), transparent),
-                                            linear-gradient(180deg, var(--bg-1), var(--bg-2));
-                }
-
-                .hero { width: 100%; max-width: 980px; display: flex; justify-content: center; align-items: center; gap: 32px; }
-                .glass {
-                    width: 100%;
-                    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.015));
-                    border: 1px solid rgba(255,255,255,0.06);
-                    backdrop-filter: blur(8px) saturate(120%);
-                    padding: 34px;
-                    border-radius: 14px;
-                    box-shadow: 0 10px 30px rgba(2,6,23,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
-                }
-
-                .title { margin: 0; font-size: 22px; color: #fff; letter-spacing: -0.2px; }
-                .subtitle { margin: 8px 0 22px 0; color: var(--muted); font-size: 13px; }
-
-                .form { display: grid; gap: 14px; }
-                .field { display: flex; flex-direction: column; gap: 8px; }
-                .labelText { color: #cbd5e1; font-size: 13px; }
-
-                input[type="text"], input[type="email"], input[type="password"] {
-                    width: 100%;
-                    background: var(--card);
-                    border: 1px solid rgba(255,255,255,0.06);
-                    padding: 12px 14px;
-                    border-radius: 10px;
-                    color: #fff;
-                    outline: none;
-                    transition: box-shadow .15s, transform .06s;
-                    font-size: 14px;
-                }
-                input::placeholder { color: rgba(255,255,255,0.35); }
-                input:focus { box-shadow: 0 4px 18px rgba(6,182,212,0.08); transform: translateY(-1px); border-color: rgba(6,182,212,0.2); }
-
-                .twoCols { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-                .pwWrap { display: flex; gap: 8px; align-items: center; }
-                .toggle {
-                    background: transparent;
-                    border: none;
-                    color: #a5b4fc;
-                    font-weight: 600;
-                    cursor: pointer;
-                    padding: 8px 10px;
-                    border-radius: 8px;
-                }
-
-                .pwStrength { display: flex; align-items: center; gap: 12px; margin-top: 6px; }
-                .meter {
-                    height: 8px;
-                    width: 120px;
-                    background: rgba(255,255,255,0.06);
-                    border-radius: 6px;
-                    overflow: hidden;
-                    position: relative;
-                }
-                .meter::after {
-                    content: "";
-                    position: absolute;
-                    height: 100%;
-                    left: 0;
-                    top: 0;
-                    transition: width .35s ease, background .35s ease;
-                }
-                .meter.s0::after { width: 12%; background: #ef4444; }
-                .meter.s1::after { width: 35%; background: #f97316; }
-                .meter.s2::after { width: 58%; background: #fbbf24; }
-                .meter.s3::after { width: 80%; background: #60a5fa; }
-                .meter.s4::after { width: 100%; background: #34d399; }
-
-                .pwMeta { display:flex; gap:10px; align-items:center; color: var(--muted); font-size: 12px; }
-                .pwLabel { color: #fff; font-weight: 600; margin-right: 6px; }
-
-                .checkbox { display:flex; gap:10px; align-items:center; color: var(--muted); font-size: 13px; margin-top: 6px; }
-                .checkbox input { width: 16px; height: 16px; accent-color: #7c3aed; }
-
-                .submit {
-                    margin-top: 6px;
-                    background: var(--accent);
-                    color: white;
-                    padding: 12px 16px;
-                    border-radius: 12px;
-                    border: none;
-                    font-weight: 700;
-                    cursor: pointer;
-                    box-shadow: 0 6px 18px rgba(124,58,237,0.2);
-                }
-                .submit[disabled] { opacity: 0.6; cursor: not-allowed; }
-
-                .divider { text-align: center; color: var(--muted); margin: 8px 0 2px; font-size: 12px; }
-
-                .socials { display:flex; gap: 10px; margin-top: 8px; }
-                .social {
-                    flex: 1;
-                    display:flex;
-                    align-items:center;
-                    gap:10px;
-                    justify-content:center;
-                    padding: 10px 12px;
-                    border-radius: 10px;
-                    border: 1px solid rgba(255,255,255,0.04);
-                    background: rgba(255,255,255,0.02);
-                    color: white;
-                    cursor: pointer;
-                    font-weight: 600;
-                }
-                .social svg { filter: drop-shadow(0 1px 0 rgba(0,0,0,0.2)); }
-                .social.google { background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); }
-                .social.github { background: rgba(255,255,255,0.02); }
-
-                .error { color: #ffb4b4; font-size: 12px; margin-top: 6px; }
-                .success { margin-top: 10px; color: #bbf7d0; background: rgba(0,0,0,0.15); padding: 8px 10px; border-radius: 8px; font-weight: 600; }
-
-                .attribution { margin-top: 18px; color: rgba(255,255,255,0.4); font-size: 13px; text-align: center; }
-
-                @media (max-width: 720px) {
-                    .twoCols { grid-template-columns: 1fr; }
-                    .hero { padding: 10px; }
-                }
-            `}</style>
-        </>
+            </div>
+        </div>
     );
 }
 

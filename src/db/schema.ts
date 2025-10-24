@@ -24,6 +24,7 @@ export const categories = pgTable("categories", {
   description: text("description"),
   createdAt: integer("created_at").notNull().default(0),
   updatedAt: integer("updated_at").notNull().default(0),
+  
 });
 
 export const post_categories = pgTable("post_categories", {

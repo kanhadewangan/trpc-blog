@@ -12,11 +12,15 @@ export default function List() {
   const [successId, setSuccessId] = useState<number | null>(null);
   const router = useRouter();
 
-  const mutation = trpc.signIn.useMutation({
+
+  const mutation = trpc.signup.useMutation({
     onSuccess(data) {
       setError(null);
       setLoading(false);
-      console.log("User created with ID:", data);
+      const userId = data
+      console.log("User created with ID:", userId);
+      localStorage.setItem("userId", String(userId));
+
     },
     onError(err) {
       setError(err.message);
